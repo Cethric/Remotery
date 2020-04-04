@@ -6556,6 +6556,10 @@ typedef void (GLAPIENTRY * PFNGLFINISHPROC) (void);
 #define rmtglGetInteger64v RMT_GL_GET_FUN(__glGetInteger64v)
 #define rmtglFinish RMT_GL_GET_FUN(__glFinish)
 
+#ifdef RMT_PLATFORM_LINUX
+typedef void*(GLAPIENTRY *PFNGLXGETPROCADDRESSARB)(const GLubyte*);
+#define rmtglxGetProcAddressARB RMT_GL_GET_FUN(__glxGetProcAddressARB)
+#endif // RMT_PLATFORM_LINUX
 
 struct OpenGL_t
 {
@@ -6587,6 +6591,10 @@ struct OpenGL_t
 
     // Sample trees in transit in the message queue for release on shutdown
     Buffer* flush_samples;
+
+#ifdef RMT_PLATFORM_LINUX
+    PFNGLXGETPROCADDRESSARB __glxGetProcAddressARB;
+#endif // RMT_PLATFORM_LINUX
 };
 
 
@@ -6601,15 +6609,13 @@ static GLenum rmtglGetError(void)
 
     return (GLenum)0;
 }
-
-
-#ifdef RMT_PLATFORM_LINUX
-    #ifdef __cplusplus
-        extern "C" void* glXGetProcAddressARB(const GLubyte*);
-    #else
-        extern void* glXGetProcAddressARB(const GLubyte*);
-    #endif
-#endif
+//#ifdef RMT_PLATFORM_LINUX
+//    #ifdef __cplusplus
+//        extern "C" void* glXGetProcAddressARB(const GLubyte*);
+//    #else
+//        extern void* glXGetProcAddressARB(const GLubyte*);
+//    #endif
+//#endif
 
 
 static ProcReturnType rmtglGetProcAddress(OpenGL* opengl, const char* symbol)
@@ -6632,7 +6638,7 @@ static ProcReturnType rmtglGetProcAddress(OpenGL* opengl, const char* symbol)
 
     #elif defined(RMT_PLATFORM_LINUX)
 
-        return glXGetProcAddressARB((const GLubyte*)symbol);
+        return rmtglxGetProcAddressARB((const GLubyte*)symbol);
 
     #endif
 
@@ -6875,6 +6881,7 @@ RMT_API void _rmt_BindOpenGL()
             opengl->dll_handle = rmtLoadLibrary("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL");
         #elif defined (RMT_PLATFORM_LINUX)
             opengl->dll_handle = rmtLoadLibrary("libGL.so");
+            opengl->__glxGetProcAddressARB = (PFNGLFINISHPROC)rmtGetProcAddress(opengl->dll_handle, "glxGetProcAddressARB");
         #endif
 
         opengl->__glGetError = (PFNGLGETERRORPROC)rmtGetProcAddress(opengl->dll_handle, "glGetError");
