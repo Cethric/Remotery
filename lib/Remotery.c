@@ -6557,7 +6557,7 @@ typedef void (GLAPIENTRY * PFNGLFINISHPROC) (void);
 #define rmtglFinish RMT_GL_GET_FUN(__glFinish)
 
 #ifdef RMT_PLATFORM_LINUX
-typedef void*(GLAPIENTRY *PFNGLXGETPROCADDRESSARB)(const GLubyte*);
+typedef ProcReturnType (GLAPIENTRY * PFNGLXGETPROCADDRESSARB)(const GLubyte*);
 #define rmtglxGetProcAddressARB RMT_GL_GET_FUN(__glxGetProcAddressARB)
 #endif // RMT_PLATFORM_LINUX
 
@@ -6638,7 +6638,7 @@ static ProcReturnType rmtglGetProcAddress(OpenGL* opengl, const char* symbol)
 
     #elif defined(RMT_PLATFORM_LINUX)
 
-        return rmtglxGetProcAddressARB((const GLubyte*)symbol);
+        return g_Remotery->opengl->__glxGetProcAddressARB((const GLubyte*)symbol);
 
     #endif
 
